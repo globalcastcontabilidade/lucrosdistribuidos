@@ -1,0 +1,215 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lucro Distribuído — GlobalCast</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#2161ed;--link:#2161ed;--bg:#f8f8f8;--card:#fff;--ink:#1d1d1b;--mute:#455364;--line:#d6dee8;--err:#c62828;--r:8px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--link:#7aa2ff;--bg:#0e1116;--card:#171c24;--ink:#eef1f5;--mute:#a9b6c6;--line:#2c3644;--err:#ff7b72}}
+:root[data-theme="dark"]{--link:#7aa2ff;--bg:#0e1116;--card:#171c24;--ink:#eef1f5;--mute:#a9b6c6;--line:#2c3644;--err:#ff7b72}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 Inter,system-ui,sans-serif}
+[hidden]{display:none!important}
+h1,h2,legend,.btn{font-family:'Hanken Grotesk',Inter,sans-serif}
+a{color:var(--link)}
+.wrap{max-width:720px;margin:0 auto;padding:0 20px}
+.top{background:#000;color:#f8f8f8;border-bottom:3px solid var(--blue)}
+.top .wrap{padding-top:26px;padding-bottom:34px}
+.brand{font:700 20px 'Hanken Grotesk',sans-serif;letter-spacing:.02em}
+.brand i{color:var(--blue);font-style:normal}
+.top h1{font-size:clamp(28px,6.5vw,42px);line-height:1.1;font-weight:600;margin:30px 0 14px}
+.pill{display:inline-block;background:var(--blue);color:#fff;font:600 14px 'Hanken Grotesk',sans-serif;border-radius:99px;padding:5px 14px}
+main{padding:28px 0 60px}
+.info{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:22px;font-size:15px}
+.info h2{font-size:17px;margin:14px 0 4px}
+.info ul{margin:0;padding-left:20px;color:var(--mute)}
+.info p{margin:0 0 6px}
+.card{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:var(--r);background:var(--card);margin:0 0 22px;padding:18px 20px 6px}
+legend{font-size:20px;font-weight:600;padding:0 6px;margin-left:-6px}
+.sub{margin:0 0 14px;color:var(--mute);font-size:14.5px}
+.f{margin:0 0 16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+label,.lab{display:block;font-weight:500;font-size:14.5px;margin-bottom:6px}
+.hint{font-weight:400;color:var(--mute);font-size:13px;display:block}
+input[type=text],input[type=email],select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;min-height:46px}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+.mw{position:relative}
+.mw span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:15px;pointer-events:none}
+.mw input{padding-left:42px}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{position:relative;margin:0;font-weight:500}
+.opt input{position:absolute;opacity:0;inset:0;cursor:pointer;width:100%;height:100%;margin:0}
+.opt span{display:block;min-width:56px;text-align:center;padding:10px 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);font-size:15px}
+.opt input:checked+span{border-color:var(--blue);background:var(--blue);color:#fff}
+.opt input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.chk{display:flex;gap:12px;align-items:flex-start;font-weight:400;cursor:pointer}
+.chk input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--blue);flex:none}
+.err{display:none;color:var(--err);font-size:13px;margin-top:5px}
+.f.bad .err{display:block}
+.f.bad input[type=text],.f.bad input[type=email],.f.bad select{border-color:var(--err)}
+.f.bad .opts{outline:1px solid var(--err);outline-offset:4px;border-radius:var(--r)}
+.sum{margin:0 0 22px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:6px 20px}
+.sum div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.sum div:last-child{border:0;font-weight:600}
+.sum small{color:var(--mute)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 26px;border:0;border-radius:var(--r);background:var(--blue);color:#fff;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
+.btn:hover{filter:brightness(.9)}
+.btn.ghost{background:transparent;color:var(--link);border:1px solid var(--link)}
+.send{width:100%}
+#ok{display:none}#ok.show{display:block}
+#ok h2{font-size:32px;margin:0 0 8px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+footer{background:#000;color:#b1c3d8;font-size:14px}
+footer .wrap{padding-top:28px;padding-bottom:28px}
+footer p{margin:4px 0}footer a{color:#f8f8f8}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">Global<i>Cast</i></div>
+  <h1>Lucros distribuídos / transferidos para os sócios</h1>
+  <span class="pill" id="pill"></span>
+</div></header>
+
+<main><div class="wrap">
+<form id="f" novalidate>
+  <div class="info">
+    <p id="lead"></p>
+    <div class="f" style="margin:12px 0 0"><label for="per">Período <span class="hint">O trimestre mais recente já vem selecionado. Só altere se precisar informar outro.</span></label><select id="per"></select></div>
+    <h2>O que considerar como lucro?</h2>
+    <ul><li>Somente os valores transferidos da conta da empresa (PJ) para a conta pessoa física (PF);</li><li>Mantenha separadas as contas bancárias da empresa e do sócio.</li></ul>
+    <h2>Como preencher?</h2>
+    <ul><li>Informe o valor total transferido da empresa para o sócio em cada mês;</li><li>Não inclua o Pró-Labore nesse valor — há um campo específico para ele.</li></ul>
+  </div>
+
+  <fieldset class="card">
+    <legend>A empresa</legend>
+    
+    <div class="f"><label for="empresa">Nome da empresa</label><input type="text" id="empresa" name="empresa" required autocomplete="organization"><div class="err">Informe o nome da empresa.</div></div>
+    <div class="f"><label for="cnpj">CNPJ da empresa</label><input type="text" id="cnpj" name="cnpj" inputmode="text" placeholder="00.000.000/0000-00" required><div class="err">Informe um CNPJ válido.</div></div>
+    <div class="f"><span class="lab">Quantos sócios/donos a empresa tem?</span>
+      <div class="opts" id="qtd"></div><div class="err">Selecione a quantidade.</div></div>
+  </fieldset>
+
+  <div id="partners"></div>
+
+  <fieldset class="card">
+    <legend>Convênio médico</legend>
+    <div class="f"><span class="lab">Tem convênio médico no nome da empresa? <span class="hint">Marque “Sim” apenas se o convênio estiver no nome da empresa.</span></span><div class="opts" data-yn="conv"></div><div class="err">Selecione uma opção.</div></div>
+    <div class="f" data-if="conv" hidden><label>Valor mensal pago pela empresa <span class="hint">Apenas o valor pago por mês (não o total do trimestre).</span></label><div class="mw"><span>R$</span><input type="text" class="mny" inputmode="numeric" name="conv_valor" placeholder="0,00"></div><div class="err">Informe o valor mensal.</div></div>
+  </fieldset>
+
+  <div class="sum" id="sum" aria-live="polite"></div>
+  <div class="f"><label class="chk"><input type="checkbox" id="ck" required><span>Confirmo que as informações acima estão corretas.</span></label><div class="err">Marque para confirmar.</div></div>
+  <button type="submit" class="btn send">Enviar informações</button>
+</form>
+
+<section id="ok" aria-live="polite">
+  <h2>A GlobalCast agradece!</h2>
+  <p>Suas informações foram registradas. Confira o resumo abaixo.</p>
+  <div class="sum" id="okSum"></div>
+  <div class="actions">
+    <a class="btn" target="_blank" rel="noopener" href="https://api.whatsapp.com/send?phone=551131592313">Falar com a gente no WhatsApp</a>
+    <button type="button" class="btn ghost" id="again">Enviar outra resposta</button>
+  </div>
+</section>
+</div></main>
+
+<footer><div class="wrap">
+  <p><a href="https://globalauditoria.com.br">globalauditoria.com.br</a> · <a href="mailto:contato@globalauditoria.com.br">contato@globalauditoria.com.br</a></p>
+  <p>WhatsApp <a href="https://api.whatsapp.com/send?phone=551131592313">(11) 3159-2313</a> · Rua Restinga, 113, 12º andar, conj. 1209 — Tatuapé, São Paulo/SP · CRC 2SP036652</p>
+</div></footer>
+
+<script>
+// Cole aqui a URL do Web App do Google Apps Script para gravar cada resposta numa planilha (vazio = desativado).
+const WEBHOOK="https://script.google.com/macros/s/AKfycby8OifQ4YjqDxqnE8VJvuZJPB0Uogmxq_vDnpf6kmqCuWpsLOdxYiy5oLDoe8HNXiRz_A/exec";
+const MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const form=$('#f'),sel=$('#per');
+const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const num=v=>parseFloat((v||'').replace(/\./g,'').replace(',','.'))||0;
+
+// ---- trimestres: o mais recente concluído vem selecionado (muda sozinho a cada trimestre) ----
+const now=new Date();let cq=Math.floor(now.getMonth()/3),cy=now.getFullYear();if(cq===0){cq=4;cy--}
+for(let i=0,q=cq,y=cy;i<8;i++){sel.add(new Option(q+'º trimestre de '+y,q+'-'+y));if(--q===0){q=4;y--}}
+const up=new URLSearchParams(location.search),want=up.get('tri')+'-'+up.get('ano');
+if([...sel.options].some(o=>o.value===want))sel.value=want;
+function P(){const[q,y]=sel.value.split('-').map(Number),dm=q*3%12,dy=q===4?y+1:y,dd=new Date(dy,dm+1,0).getDate();
+  return{q,y,m:[0,1,2].map(i=>MES[(q-1)*3+i]),prazo:String(dd).padStart(2,'0')+'/'+String(dm+1).padStart(2,'0')+'/'+dy}}
+function apply(){const p=P();
+  $('#pill').textContent=p.q+'º TRIMESTRE '+p.y;
+  document.title='Lucro Distribuído | '+p.q+'º trimestre '+p.y+' — GlobalCast';
+  $('#lead').innerHTML='A partir de 2024, é obrigatório informar os lucros das empresas a cada três meses. Registre os valores transferidos da conta bancária da empresa (PJ) para a conta pessoal (PF) em <b>'+p.m[0]+', '+p.m[1]+' e '+p.m[2]+' de '+p.y+'</b>. Prazo final: <b>'+p.prazo+'</b>.';
+  $$('[data-m]').forEach(e=>e.textContent=p.m[e.dataset.m].toUpperCase());totals()}
+sel.addEventListener('change',apply);
+
+// ---- componentes ----
+const yn=n=>'<label class="opt"><input type="radio" name="'+n+'" value="Sim" required><span>Sim</span></label><label class="opt"><input type="radio" name="'+n+'" value="Não" required><span>Não</span></label>';
+$$('[data-yn]').forEach(e=>e.innerHTML=yn(e.dataset.yn));
+$('#qtd').innerHTML=[1,2,3,4].map(n=>'<label class="opt"><input type="radio" name="qtd" value="'+n+'" required><span>'+n+'</span></label>').join('');
+const mny=(l,n,h)=>'<div class="f"><label>'+l+(h?'<span class="hint">'+h+'</span>':'')+'</label><div class="mw"><span>R$</span><input type="text" class="mny" inputmode="numeric" name="'+n+'" placeholder="0,00" required></div><div class="err">Informe o valor (use 0,00 se não houve).</div></div>';
+const card=i=>'<fieldset class="card" data-i="'+i+'"><legend>Sócio '+i+'</legend><p class="sub">Informe os lucros/transferências realizados para este sócio.</p>'
+ +'<div class="row"><div class="f"><label>Nome do beneficiário/sócio</label><input type="text" name="s'+i+'_nome" required><div class="err">Informe o nome.</div></div>'
+ +'<div class="f"><label>CPF do beneficiário/sócio</label><input type="text" class="cpf" name="s'+i+'_cpf" inputmode="numeric" placeholder="000.000.000-00" required><div class="err">Informe um CPF válido.</div></div></div>'
+ +[0,1,2].map(k=>mny('Valor transferido em R$ — <b data-m="'+k+'"></b>','s'+i+'_m'+k)).join('')
+ +'<div class="f"><span class="lab">Tem folha de Pró-Labore no nome deste sócio? <span class="hint">Marque “Sim” apenas se houver folha de Pró-Labore.</span></span><div class="opts">'+yn('s'+i+'_pl')+'</div><div class="err">Selecione uma opção.</div></div>'
+ +'<div data-if="s'+i+'_pl" hidden>'+mny('Valor mensal do Pró-Labore','s'+i+'_plv','Informe o valor BRUTO/TOTAL mensal (não o valor pago na guia, nem o total do trimestre).')+'</div></fieldset>';
+
+$('#qtd').addEventListener('change',e=>{const n=+e.target.value,box=$('#partners');
+  while(box.children.length<n)box.insertAdjacentHTML('beforeend',card(box.children.length+1));
+  while(box.children.length>n)box.lastChild.remove();
+  apply();cond()});
+function cond(){$$('[data-if]').forEach(b=>{const r=form.querySelector('input[name="'+b.dataset.if+'"]:checked'),on=!!r&&r.value==='Sim';
+  b.hidden=!on;b.querySelectorAll('input').forEach(x=>{x.required=on;if(!on){x.value='';b.querySelectorAll('.f').forEach(f=>f.classList.remove('bad'))}})});totals()}
+
+// ---- máscaras e validações ----
+const cpfOk=s=>{s=s.replace(/\D/g,'');if(s.length!==11||/^(\d)\1+$/.test(s))return false;for(const n of[9,10]){let t=0;for(let i=0;i<n;i++)t+=s[i]*(n+1-i);if((t*10%11)%10!=s[n])return false}return true};
+const cnpjOk=s=>{s=s.replace(/[^0-9A-Z]/g,'');if(s.length!==14)return false;const v=[...s].map(c=>c.charCodeAt(0)-48);
+  for(const n of[12,13]){const w=n===12?[5,4,3,2,9,8,7,6,5,4,3,2]:[6,5,4,3,2,9,8,7,6,5,4,3,2];let t=0;for(let i=0;i<n;i++)t+=v[i]*w[i];const r=t%11;if((r<2?0:11-r)!==v[n])return false}return true};
+function valid(el){
+  if(el.type==='radio')return!!form.querySelector('input[name="'+el.name+'"]:checked');
+  if(el.type==='checkbox')return el.checked;
+  const v=el.value.trim();if(!v)return false;
+  if(el.classList.contains('cpf'))return cpfOk(v);
+  if(el.name==='cnpj')return cnpjOk(v);
+  if(el.type==='email')return/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  return true}
+form.addEventListener('input',e=>{const t=e.target;
+  if(t.classList.contains('mny')){const c=t.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,13);t.value=c?(+c/100).toLocaleString('pt-BR',{minimumFractionDigits:2}):''}
+  if(t.classList.contains('cpf')){const v=t.value.replace(/\D/g,'').slice(0,11);t.value=v.length>3?v.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2})/,(m,a,b,c,d)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'-'+d:'')):v}
+  if(t.name==='cnpj'){const v=t.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,14);t.value=v.length>2?v.replace(/^(.{2})(.{0,3})(.{0,3})(.{0,4})(.{0,2})/,(m,a,b,c,d,e)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'/'+d:'')+(e?'-'+e:'')):v}
+  const b=t.closest('.f');if(b&&b.classList.contains('bad')&&valid(t))b.classList.remove('bad');
+  totals()});
+form.addEventListener('change',e=>{if(e.target.type==='radio'){cond();const b=e.target.closest('.f');if(b)b.classList.remove('bad')}});
+
+// ---- resumo ao vivo ----
+function rows(){const out=[];$$('#partners .card').forEach(c=>{const i=c.dataset.i,g=n=>(form.elements[n]||{}).value||'';
+  out.push([g('s'+i+'_nome').trim()||'Sócio '+i,[0,1,2].reduce((a,k)=>a+num(g('s'+i+'_m'+k)),0)])});return out}
+function sumHtml(){const r=rows();if(!r.length)return'<div><small>Selecione a quantidade de sócios para ver o resumo.</small></div>';
+  return r.map(x=>'<div><span>'+x[0].replace(/</g,'&lt;')+' <small>total no trimestre</small></span><span>'+brl(x[1])+'</span></div>').join('')+'<div><span>Total transferido aos sócios no '+P().q+'º trimestre de '+P().y+'</span><span>'+brl(r.reduce((a,x)=>a+x[1],0))+'</span></div>'}
+function totals(){$('#sum').innerHTML=sumHtml()}
+
+// ---- envio ----
+form.addEventListener('submit',e=>{e.preventDefault();let first=null;
+  form.querySelectorAll('[required]').forEach(el=>{const b=el.closest('.f'),ok=valid(el);b.classList.toggle('bad',!ok);if(!ok&&!first)first=el});
+  if(first){first.scrollIntoView({block:'center'});if(first.type!=='radio'&&first.type!=='checkbox')first.focus();return}
+  const p=P(),g=n=>(form.elements[n]||{}).value||'',pl=n=>(form.querySelector('input[name="'+n+'"]:checked')||{}).value||'';
+  const d={'Enviado em':new Date().toLocaleString('pt-BR'),'Trimestre':p.q+'º TRIMESTRE '+p.y,'Mês 1':p.m[0],'Mês 2':p.m[1],'Mês 3':p.m[2],'Empresa':g('empresa').trim(),'CNPJ':g('cnpj'),'Qtd sócios':g('qtd'),'Convênio médico':pl('conv'),'Convênio - valor mensal':g('conv_valor')};
+  $$('#partners .card').forEach(c=>{const i=c.dataset.i,k='Sócio '+i+' - ';d[k+'Nome']=g('s'+i+'_nome').trim();d[k+'CPF']=g('s'+i+'_cpf');
+    [0,1,2].forEach(m=>d[k+'Valor Mês '+(m+1)]=g('s'+i+'_m'+m));d[k+'Total']=[0,1,2].reduce((a,m)=>a+num(g('s'+i+'_m'+m)),0).toFixed(2).replace('.',',');
+    d[k+'Pró-Labore']=pl('s'+i+'_pl');d[k+'Pró-Labore mensal']=g('s'+i+'_plv')});
+  if(WEBHOOK){fetch(WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify(d),headers:{'Content-Type':'text/plain;charset=utf-8'}}).catch(()=>{})}
+  $('#okSum').innerHTML='<div><span>Período</span><span>'+d['Trimestre']+'</span></div><div><span>Empresa</span><span>'+d['Empresa'].replace(/</g,'&lt;')+'</span></div>'+sumHtml();
+  form.hidden=true;$('#ok').classList.add('show');$('#ok').scrollIntoView({block:'start'})});
+$('#again').addEventListener('click',()=>{form.reset();$('#partners').innerHTML='';form.hidden=false;$('#ok').classList.remove('show');cond();apply();window.scrollTo({top:0})});
+apply();
+</script>
+</body>
+</html>
+
+</body></html>

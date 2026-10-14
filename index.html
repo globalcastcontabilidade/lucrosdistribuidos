@@ -59,6 +59,13 @@ input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;border
 .btn:hover{filter:brightness(.9)}
 .btn.ghost{background:transparent;color:var(--link);border:1px solid var(--link)}
 .send{width:100%}
+.mask{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.mask.show{display:flex}
+.dlg{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);max-width:480px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dlg h2{margin:0 0 8px;font-size:20px}.dlg p{margin:0 0 18px;color:var(--mute)}
+.dlg .acts{display:flex;flex-direction:column;gap:10px}
+.dlg .btn{width:100%}
+.dlg .lnk{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;font:inherit;padding:8px}
 #ok{display:none}#ok.show{display:block}
 #ok h2{font-size:32px;margin:0 0 8px}
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
@@ -103,6 +110,17 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
   <button type="submit" class="btn send">Enviar informações</button>
 </form>
 
+<div class="mask" id="dup" role="dialog" aria-modal="true" aria-labelledby="dupT">
+  <div class="dlg">
+    <h2 id="dupT">Você já preencheu este trimestre</h2>
+    <p id="dupM"></p>
+    <div class="acts">
+      <button type="button" class="btn" id="dupSub">Substituir a resposta anterior</button>
+      <button type="button" class="btn ghost" id="dupNov">Enviar como informação adicional</button>
+      <button type="button" class="lnk" id="dupCan">Voltar e revisar</button>
+    </div>
+  </div>
+</div>
 <section id="ok" aria-live="polite">
   <h2>A GlobalCast agradece!</h2>
   <p>Suas informações foram registradas. Confira o resumo abaixo.</p>
@@ -197,10 +215,27 @@ form.addEventListener('submit',e=>{e.preventDefault();let first=null;
   $$('#partners .card').forEach(c=>{const i=c.dataset.i,k='Sócio '+i+' - ';d[k+'Nome']=g('s'+i+'_nome').trim();d[k+'CPF']=g('s'+i+'_cpf');
     [0,1,2].forEach(m=>d[k+'Valor Mês '+(m+1)]=g('s'+i+'_m'+m));d[k+'Total']=[0,1,2].reduce((a,m)=>a+num(g('s'+i+'_m'+m)),0).toFixed(2).replace('.',',');
     d[k+'Pró-Labore']=pl('s'+i+'_pl');d[k+'Pró-Labore mensal']=g('s'+i+'_plv')});
-  if(WEBHOOK){fetch(WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify(d),headers:{'Content-Type':'text/plain;charset=utf-8'}}).catch(()=>{})}
-  $('#okSum').innerHTML='<div><span>Período</span><span>'+d['Trimestre']+'</span></div><div><span>Empresa</span><span>'+d['Empresa'].replace(/</g,'&lt;')+'</span></div>'+sumHtml();
-  form.hidden=true;$('#ok').classList.add('show');$('#ok').scrollIntoView({block:'start'})});
+  const btn=form.querySelector('.send'),txt=btn.textContent;btn.disabled=true;btn.textContent='Verificando…';
+  const libera=()=>{btn.disabled=false;btn.textContent=txt};
+  const post=(o,cors)=>fetch(WEBHOOK,{method:'POST',mode:cors?'cors':'no-cors',body:JSON.stringify(o),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+  const concluir=acao=>{
+    if(WEBHOOK){post(Object.assign({'__acao':acao},d),false).catch(()=>{})}
+    $('#okSum').innerHTML=(acao==='substituir'?'<div><span>Situação</span><span>Resposta anterior substituída</span></div>':'')+'<div><span>Período</span><span>'+d['Trimestre']+'</span></div><div><span>Empresa</span><span>'+d['Empresa'].replace(/</g,'&lt;')+'</span></div>'+sumHtml();
+    libera();$('#dup').classList.remove('show');form.hidden=true;$('#ok').classList.add('show');$('#ok').scrollIntoView({block:'start'})};
+  const pergunta=r=>{
+    const quando=r.enviadoEm?' (enviada em '+String(r.enviadoEm).replace(/</g,'&lt;')+')':'';
+    $('#dupM').innerHTML='Já existe uma resposta para o <b>'+d['Trimestre']+'</b> com '+(r.motivo==='nome'?'este nome de empresa':'este CNPJ')+quando+'. Deseja <b>substituir</b> pelas informações novas ou <b>enviar como informação adicional</b>?';
+    $('#dup').classList.add('show');$('#dupSub').focus();
+    $('#dupSub').onclick=()=>concluir('substituir');
+    $('#dupNov').onclick=()=>concluir('novo');
+    $('#dupCan').onclick=()=>{$('#dup').classList.remove('show');libera()}};
+  if(!WEBHOOK){concluir('novo');return}
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),8000);
+  fetch(WEBHOOK,{method:'POST',mode:'cors',signal:ctl?ctl.signal:undefined,body:JSON.stringify({'__acao':'verificar','Trimestre':d['Trimestre'],'CNPJ':d['CNPJ'],'Empresa':d['Empresa']}),headers:{'Content-Type':'text/plain;charset=utf-8'}})
+    .then(x=>x.json()).then(r=>{clearTimeout(tm);r&&r.existe?pergunta(r):concluir('novo')})
+    .catch(()=>{clearTimeout(tm);concluir('novo')})});
 $('#again').addEventListener('click',()=>{form.reset();$('#partners').innerHTML='';form.hidden=false;$('#ok').classList.remove('show');cond();apply();window.scrollTo({top:0})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#dup').classList.contains('show'))$('#dupCan').click()});
 apply();
 </script>
 </body>

@@ -202,14 +202,22 @@ function consultaCnpj(){
   const c=form.elements.cnpj,m=$('#cnpjMsg'),emp=form.elements.empresa,d=c.value.replace(/\D/g,'');
   if(!cnpjOk(c.value)||d.length!==14||c.value.replace(/[^0-9A-Z]/gi,'').length!==14){m.textContent='';lastQ='';return}
   if(d===lastQ)return;lastQ=d;m.textContent='Consultando CNPJ…';
-  const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),7000);
-  fetch('https://brasilapi.com.br/api/cnpj/v1/'+d,{signal:ctl?ctl.signal:undefined}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{
-    clearTimeout(tm);if(d!==lastQ)return;
-    const nome=(j.razao_social||j.nome_fantasia||'').trim();if(!nome)throw 0;
+  buscaCnpj(d).then(r=>{
+    if(d!==lastQ)return;
     const livre=!emp.value.trim()||emp.value===autoNome;
-    if(livre){emp.value=nome;autoNome=nome;const b=emp.closest('.f');b.classList.remove('bad')}
-    m.textContent='Encontrado: '+nome+(j.descricao_situacao_cadastral&&j.descricao_situacao_cadastral!=='ATIVA'?' — situação: '+j.descricao_situacao_cadastral:'')
-  }).catch(()=>{clearTimeout(tm);if(d===lastQ)m.textContent='Não conseguimos consultar este CNPJ. Preencha o nome da empresa manualmente.'})}
+    if(livre){emp.value=r.nome;autoNome=r.nome;emp.closest('.f').classList.remove('bad')}
+    m.textContent='Encontrado: '+r.nome+(r.situacao&&!/^ATIVA$/i.test(r.situacao)?' — situação: '+r.situacao:'')
+  }).catch(()=>{if(d===lastQ)m.textContent='Não conseguimos consultar este CNPJ. Preencha o nome da empresa manualmente.'})}
+// tenta vários serviços ao mesmo tempo; vale o primeiro que responder com um nome
+function buscaCnpj(d){
+  const tenta=(url,pega,opt)=>{const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),9000);
+    return fetch(url,Object.assign({signal:ctl?ctl.signal:undefined},opt||{})).then(r=>{if(!r.ok)throw new Error(url+' '+r.status);return r.json()}).then(j=>{clearTimeout(tm);const o=pega(j);if(!o||!o.nome)throw new Error(url+' sem nome');return o})};
+  const fontes=[
+    tenta('https://brasilapi.com.br/api/cnpj/v1/'+d,j=>({nome:(j.razao_social||j.nome_fantasia||'').trim(),situacao:j.descricao_situacao_cadastral})),
+    tenta('https://minhareceita.org/'+d,j=>({nome:(j.razao_social||j.nome_fantasia||'').trim(),situacao:j.descricao_situacao_cadastral})),
+    tenta('https://publica.cnpj.ws/cnpj/'+d,j=>({nome:(j.razao_social||'').trim(),situacao:j.estabelecimento&&j.estabelecimento.situacao_cadastral}))];
+  if(WEBHOOK)fontes.push(tenta(WEBHOOK,j=>j&&j.ok?{nome:j.nome,situacao:j.situacao}:null,{method:'POST',mode:'cors',body:JSON.stringify({'__acao':'cnpj','CNPJ':d}),headers:{'Content-Type':'text/plain;charset=utf-8'}}));
+  return new Promise((ok,no)=>{let n=fontes.length,erros=[];fontes.forEach(f=>f.then(ok,e=>{erros.push(String(e));if(--n===0){if(window.console)console.warn('Consulta CNPJ falhou:',erros);no(erros)}}))})}
 form.addEventListener('input',e=>{if(e.target.name==='cnpj')consultaCnpj()});
 form.addEventListener('focusout',e=>{const t=e.target;
   if((t.name==='cnpj'||t.classList.contains('cpf'))&&t.value.trim()){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});

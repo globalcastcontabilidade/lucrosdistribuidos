@@ -96,8 +96,8 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
   <fieldset class="card">
     <legend>A empresa</legend>
     
-    <div class="f"><label for="empresa">Nome da empresa</label><input type="text" id="empresa" name="empresa" required autocomplete="organization"><div class="err">Informe o nome da empresa.</div></div>
-    <div class="f"><label for="cnpj">CNPJ da empresa</label><input type="text" id="cnpj" name="cnpj" inputmode="text" placeholder="00.000.000/0000-00" required><div class="err">Informe um CNPJ válido.</div></div>
+    <div class="f"><label for="cnpj">CNPJ da empresa</label><input type="text" id="cnpj" name="cnpj" inputmode="text" placeholder="00.000.000/0000-00" required><div class="err">CNPJ inválido. Confira os números digitados.</div><div class="hint" id="cnpjMsg" aria-live="polite"></div></div>
+    <div class="f"><label for="empresa">Nome da empresa <span class="hint">Preenchido automaticamente pelo CNPJ. Você pode corrigir se precisar.</span></label><input type="text" id="empresa" name="empresa" required autocomplete="organization"><div class="err">Informe o nome da empresa.</div></div>
     <div class="f"><span class="lab">Quantos sócios/donos a empresa tem?</span>
       <div class="opts" id="qtd"></div><div class="err">Selecione a quantidade.</div></div>
   </fieldset>
@@ -116,7 +116,6 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
     <p id="dupM"></p>
     <div class="acts">
       <button type="button" class="btn" id="dupSub">Substituir a resposta anterior</button>
-      <button type="button" class="btn ghost" id="dupNov">Enviar como informação adicional</button>
       <button type="button" class="lnk" id="dupCan">Voltar e revisar</button>
     </div>
   </div>
@@ -197,6 +196,25 @@ form.addEventListener('input',e=>{const t=e.target;
   if(t.name==='cnpj'){const v=t.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,14);t.value=v.length>2?v.replace(/^(.{2})(.{0,3})(.{0,3})(.{0,4})(.{0,2})/,(m,a,b,c,d,e)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'/'+d:'')+(e?'-'+e:'')):v}
   const b=t.closest('.f');if(b&&b.classList.contains('bad')&&valid(t))b.classList.remove('bad');
   totals()});
+// ---- consulta do CNPJ (não bloqueia nada) ----
+let lastQ='',autoNome='';
+function consultaCnpj(){
+  const c=form.elements.cnpj,m=$('#cnpjMsg'),emp=form.elements.empresa,d=c.value.replace(/\D/g,'');
+  if(!cnpjOk(c.value)||d.length!==14||c.value.replace(/[^0-9A-Z]/gi,'').length!==14){m.textContent='';lastQ='';return}
+  if(d===lastQ)return;lastQ=d;m.textContent='Consultando CNPJ…';
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),7000);
+  fetch('https://brasilapi.com.br/api/cnpj/v1/'+d,{signal:ctl?ctl.signal:undefined}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(j=>{
+    clearTimeout(tm);if(d!==lastQ)return;
+    const nome=(j.razao_social||j.nome_fantasia||'').trim();if(!nome)throw 0;
+    const livre=!emp.value.trim()||emp.value===autoNome;
+    if(livre){emp.value=nome;autoNome=nome;const b=emp.closest('.f');b.classList.remove('bad')}
+    m.textContent='Encontrado: '+nome+(j.descricao_situacao_cadastral&&j.descricao_situacao_cadastral!=='ATIVA'?' — situação: '+j.descricao_situacao_cadastral:'')
+  }).catch(()=>{clearTimeout(tm);if(d===lastQ)m.textContent='Não conseguimos consultar este CNPJ. Preencha o nome da empresa manualmente.'})}
+form.addEventListener('input',e=>{if(e.target.name==='cnpj')consultaCnpj()});
+form.addEventListener('focusout',e=>{const t=e.target;
+  if((t.name==='cnpj'||t.classList.contains('cpf'))&&t.value.trim()){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});
+form.addEventListener('input',e=>{const t=e.target;
+  if(t.name==='cnpj'&&t.value.replace(/[^0-9A-Z]/gi,'').length>=14||t.classList.contains('cpf')&&t.value.replace(/\D/g,'').length>=11){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});
 form.addEventListener('change',e=>{if(e.target.type==='radio'){cond();const b=e.target.closest('.f');if(b)b.classList.remove('bad')}});
 
 // ---- resumo ao vivo ----
@@ -224,10 +242,9 @@ form.addEventListener('submit',e=>{e.preventDefault();let first=null;
     libera();$('#dup').classList.remove('show');form.hidden=true;$('#ok').classList.add('show');$('#ok').scrollIntoView({block:'start'})};
   const pergunta=r=>{
     const quando=r.enviadoEm?' (enviada em '+String(r.enviadoEm).replace(/</g,'&lt;')+')':'';
-    $('#dupM').innerHTML='Já existe uma resposta para o <b>'+d['Trimestre']+'</b> com '+(r.motivo==='nome'?'este nome de empresa':'este CNPJ')+quando+'. Deseja <b>substituir</b> pelas informações novas ou <b>enviar como informação adicional</b>?';
+    $('#dupM').innerHTML='Já existe uma resposta para o <b>'+d['Trimestre']+'</b> com '+(r.motivo==='nome'?'este nome de empresa':'este CNPJ')+quando+'. Ao continuar, a resposta anterior será <b>substituída</b> pelas informações que você acabou de preencher.';
     $('#dup').classList.add('show');$('#dupSub').focus();
     $('#dupSub').onclick=()=>concluir('substituir');
-    $('#dupNov').onclick=()=>concluir('novo');
     $('#dupCan').onclick=()=>{$('#dup').classList.remove('show');libera()}};
   if(!WEBHOOK){concluir('novo');return}
   const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),8000);

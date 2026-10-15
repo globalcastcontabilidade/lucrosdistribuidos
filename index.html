@@ -69,6 +69,7 @@ input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;border
 #ok{display:none}#ok.show{display:block}
 #ok h2{font-size:32px;margin:0 0 8px}
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+#sendErr{color:var(--err);font-size:14px;margin:10px 0 0}
 footer{background:#000;color:#b1c3d8;font-size:14px}
 footer .wrap{padding-top:28px;padding-bottom:28px}
 footer p{margin:4px 0}footer a{color:#f8f8f8}
@@ -108,6 +109,7 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
   <div class="sum" id="sum" aria-live="polite"></div>
   <div class="f"><label class="chk"><input type="checkbox" id="ck" required><span>Confirmo que as informações acima estão corretas.</span></label><div class="err">Marque para confirmar.</div></div>
   <button type="submit" class="btn send">Enviar informações</button>
+  <p id="sendErr" role="alert" hidden></p>
 </form>
 
 <div class="mask" id="dup" role="dialog" aria-modal="true" aria-labelledby="dupT">
@@ -139,6 +141,9 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
 <script>
 // Cole aqui a URL do Web App do Google Apps Script para gravar cada resposta numa planilha (vazio = desativado).
 const WEBHOOK="https://script.google.com/macros/s/AKfycby8OifQ4YjqDxqnE8VJvuZJPB0Uogmxq_vDnpf6kmqCuWpsLOdxYiy5oLDoe8HNXiRz_A/exec";
+// Salário mínimo nacional por ano (piso do Pró-Labore). Atualize a cada janeiro.
+const SAL_MIN={2024:1412,2025:1518,2026:1621};
+const salMin=y=>{if(SAL_MIN[y])return SAL_MIN[y];const a=Object.keys(SAL_MIN).map(Number).sort((x,z)=>x-z);return SAL_MIN[y<a[0]?a[0]:a[a.length-1]]};
 const MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const form=$('#f'),sel=$('#per');
@@ -156,20 +161,20 @@ function apply(){const p=P();
   $('#pill').textContent=p.q+'º TRIMESTRE '+p.y;
   document.title='Lucro Distribuído | '+p.q+'º trimestre '+p.y+' — GlobalCast';
   $('#lead').innerHTML='A partir de 2024, é obrigatório informar os lucros das empresas a cada três meses. Registre os valores transferidos da conta bancária da empresa (PJ) para a conta pessoal (PF) em <b>'+p.m[0]+', '+p.m[1]+' e '+p.m[2]+' de '+p.y+'</b>. Prazo final: <b>'+p.prazo+'</b>.';
-  $$('[data-m]').forEach(e=>e.textContent=p.m[e.dataset.m].toUpperCase());totals()}
+  $$('[data-m]').forEach(e=>e.textContent=p.m[e.dataset.m].toUpperCase());$$('.smv').forEach(e=>e.textContent=brl(salMin(p.y)));$$('[data-min]').forEach(x=>{if(x.value.trim()){const b=x.closest('.f');b.classList.toggle('bad',!valid(x))}});totals()}
 sel.addEventListener('change',apply);
 
 // ---- componentes ----
 const yn=n=>'<label class="opt"><input type="radio" name="'+n+'" value="Sim" required><span>Sim</span></label><label class="opt"><input type="radio" name="'+n+'" value="Não" required><span>Não</span></label>';
 $$('[data-yn]').forEach(e=>e.innerHTML=yn(e.dataset.yn));
 $('#qtd').innerHTML=[1,2,3,4].map(n=>'<label class="opt"><input type="radio" name="qtd" value="'+n+'" required><span>'+n+'</span></label>').join('');
-const mny=(l,n,h)=>'<div class="f"><label>'+l+(h?'<span class="hint">'+h+'</span>':'')+'</label><div class="mw"><span>R$</span><input type="text" class="mny" inputmode="numeric" name="'+n+'" placeholder="0,00" required></div><div class="err">Informe o valor (use 0,00 se não houve).</div></div>';
+const mny=(l,n,h,mn)=>'<div class="f"><label>'+l+(h?'<span class="hint">'+h+'</span>':'')+'</label><div class="mw"><span>R$</span><input type="text" class="mny" inputmode="numeric" name="'+n+'" placeholder="0,00"'+(mn?' data-min="1"':'')+' required></div><div class="err">'+(mn?'O Pró-Labore não pode ser menor que o salário mínimo (<span class="smv"></span>).':'Informe o valor (use 0,00 se não houve).')+'</div></div>';
 const card=i=>'<fieldset class="card" data-i="'+i+'"><legend>Sócio '+i+'</legend><p class="sub">Informe os lucros/transferências realizados para este sócio.</p>'
  +'<div class="row"><div class="f"><label>Nome do beneficiário/sócio</label><input type="text" name="s'+i+'_nome" required><div class="err">Informe o nome.</div></div>'
  +'<div class="f"><label>CPF do beneficiário/sócio</label><input type="text" class="cpf" name="s'+i+'_cpf" inputmode="numeric" placeholder="000.000.000-00" required><div class="err">Informe um CPF válido.</div></div></div>'
  +[0,1,2].map(k=>mny('Valor transferido em R$ — <b data-m="'+k+'"></b>','s'+i+'_m'+k)).join('')
  +'<div class="f"><span class="lab">Tem folha de Pró-Labore no nome deste sócio? <span class="hint">Marque “Sim” apenas se houver folha de Pró-Labore.</span></span><div class="opts">'+yn('s'+i+'_pl')+'</div><div class="err">Selecione uma opção.</div></div>'
- +'<div data-if="s'+i+'_pl" hidden>'+mny('Valor mensal do Pró-Labore','s'+i+'_plv','Informe o valor BRUTO/TOTAL mensal (não o valor pago na guia, nem o total do trimestre).')+'</div></fieldset>';
+ +'<div data-if="s'+i+'_pl" hidden>'+mny('Valor mensal do Pró-Labore','s'+i+'_plv','Informe o valor BRUTO/TOTAL mensal (não o valor pago na guia, nem o total do trimestre). Mínimo: <span class="smv"></span> (salário mínimo).',1)+'</div></fieldset>';
 
 $('#qtd').addEventListener('change',e=>{const n=+e.target.value,box=$('#partners');
   while(box.children.length<n)box.insertAdjacentHTML('beforeend',card(box.children.length+1));
@@ -188,6 +193,7 @@ function valid(el){
   const v=el.value.trim();if(!v)return false;
   if(el.classList.contains('cpf'))return cpfOk(v);
   if(el.name==='cnpj')return cnpjOk(v);
+  if(el.dataset.min)return num(v)>=salMin(P().y);
   if(el.type==='email')return/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   return true}
 form.addEventListener('input',e=>{const t=e.target;
@@ -220,7 +226,7 @@ function buscaCnpj(d){
   return new Promise((ok,no)=>{let n=fontes.length,erros=[];fontes.forEach(f=>f.then(ok,e=>{erros.push(String(e));if(--n===0){if(window.console)console.warn('Consulta CNPJ falhou:',erros);no(erros)}}))})}
 form.addEventListener('input',e=>{if(e.target.name==='cnpj')consultaCnpj()});
 form.addEventListener('focusout',e=>{const t=e.target;
-  if((t.name==='cnpj'||t.classList.contains('cpf'))&&t.value.trim()){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});
+  if((t.name==='cnpj'||t.classList.contains('cpf')||t.dataset.min)&&t.value.trim()){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});
 form.addEventListener('input',e=>{const t=e.target;
   if(t.name==='cnpj'&&t.value.replace(/[^0-9A-Z]/gi,'').length>=14||t.classList.contains('cpf')&&t.value.replace(/\D/g,'').length>=11){const b=t.closest('.f');if(b)b.classList.toggle('bad',!valid(t))}});
 form.addEventListener('change',e=>{if(e.target.type==='radio'){cond();const b=e.target.closest('.f');if(b)b.classList.remove('bad')}});
@@ -241,7 +247,7 @@ form.addEventListener('submit',e=>{e.preventDefault();let first=null;
   $$('#partners .card').forEach(c=>{const i=c.dataset.i,k='Sócio '+i+' - ';d[k+'Nome']=g('s'+i+'_nome').trim();d[k+'CPF']=g('s'+i+'_cpf');
     [0,1,2].forEach(m=>d[k+'Valor Mês '+(m+1)]=g('s'+i+'_m'+m));d[k+'Total']=[0,1,2].reduce((a,m)=>a+num(g('s'+i+'_m'+m)),0).toFixed(2).replace('.',',');
     d[k+'Pró-Labore']=pl('s'+i+'_pl');d[k+'Pró-Labore mensal']=g('s'+i+'_plv')});
-  const btn=form.querySelector('.send'),txt=btn.textContent;btn.disabled=true;btn.textContent='Verificando…';
+  const btn=form.querySelector('.send'),txt=btn.textContent,se=$('#sendErr');se.hidden=true;btn.disabled=true;btn.textContent='Verificando…';
   const libera=()=>{btn.disabled=false;btn.textContent=txt};
   const post=(o,cors)=>fetch(WEBHOOK,{method:'POST',mode:cors?'cors':'no-cors',body:JSON.stringify(o),headers:{'Content-Type':'text/plain;charset=utf-8'}});
   const concluir=acao=>{
@@ -255,10 +261,10 @@ form.addEventListener('submit',e=>{e.preventDefault();let first=null;
     $('#dupSub').onclick=()=>concluir('substituir');
     $('#dupCan').onclick=()=>{$('#dup').classList.remove('show');libera()}};
   if(!WEBHOOK){concluir('novo');return}
-  const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),8000);
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),25000);
   fetch(WEBHOOK,{method:'POST',mode:'cors',signal:ctl?ctl.signal:undefined,body:JSON.stringify({'__acao':'verificar','Trimestre':d['Trimestre'],'CNPJ':d['CNPJ'],'Empresa':d['Empresa']}),headers:{'Content-Type':'text/plain;charset=utf-8'}})
-    .then(x=>x.json()).then(r=>{clearTimeout(tm);r&&r.existe?pergunta(r):concluir('novo')})
-    .catch(()=>{clearTimeout(tm);concluir('novo')})});
+    .then(x=>x.json()).then(r=>{clearTimeout(tm);if(!r||r.ok===false||typeof r.existe!=='boolean')throw new Error('resposta inválida');r.existe?pergunta(r):concluir('novo')})
+    .catch(()=>{clearTimeout(tm);libera();se.textContent='Não conseguimos confirmar o envio agora (falha de conexão). Seus dados continuam preenchidos — clique em "Enviar informações" novamente em alguns segundos.';se.hidden=false;se.scrollIntoView({block:'center'})})});
 $('#again').addEventListener('click',()=>{form.reset();$('#partners').innerHTML='';form.hidden=false;$('#ok').classList.remove('show');cond();apply();window.scrollTo({top:0})});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#dup').classList.contains('show'))$('#dupCan').click()});
 apply();

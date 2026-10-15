@@ -191,7 +191,7 @@ function valid(el){
   if(el.type==='email')return/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   return true}
 form.addEventListener('input',e=>{const t=e.target;
-  if(t.classList.contains('mny')){const c=t.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,13);t.value=c?(+c/100).toLocaleString('pt-BR',{minimumFractionDigits:2}):''}
+  if(t.classList.contains('mny')){const raw=t.value.replace(/\D/g,''),c=raw.replace(/^0+/,'').slice(0,13);t.value=raw?((+c||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2}):''}
   if(t.classList.contains('cpf')){const v=t.value.replace(/\D/g,'').slice(0,11);t.value=v.length>3?v.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2})/,(m,a,b,c,d)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'-'+d:'')):v}
   if(t.name==='cnpj'){const v=t.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,14);t.value=v.length>2?v.replace(/^(.{2})(.{0,3})(.{0,3})(.{0,4})(.{0,2})/,(m,a,b,c,d,e)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'/'+d:'')+(e?'-'+e:'')):v}
   const b=t.closest('.f');if(b&&b.classList.contains('bad')&&valid(t))b.classList.remove('bad');

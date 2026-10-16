@@ -110,6 +110,7 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
   <div class="f"><label class="chk"><input type="checkbox" id="ck" required><span>Confirmo que as informações acima estão corretas.</span></label><div class="err">Marque para confirmar.</div></div>
   <button type="submit" class="btn send">Enviar informações</button>
   <p id="sendErr" role="alert" hidden></p>
+  <p class="hint" style="margin:10px 0 0;text-align:center">Por segurança, registramos a data, a hora e o endereço IP de cada envio. Esses dados são usados apenas para confirmar a autoria das informações, conforme a LGPD.</p>
 </form>
 
 <div class="mask" id="dup" role="dialog" aria-modal="true" aria-labelledby="dupT">
@@ -238,12 +239,17 @@ function sumHtml(){const r=rows();if(!r.length)return'<div><small>Selecione a qu
   return r.map(x=>'<div><span>'+x[0].replace(/</g,'&lt;')+' <small>total no trimestre</small></span><span>'+brl(x[1])+'</span></div>').join('')+'<div><span>Total transferido aos sócios no '+P().q+'º trimestre de '+P().y+'</span><span>'+brl(r.reduce((a,x)=>a+x[1],0))+'</span></div>'}
 function totals(){$('#sum').innerHTML=sumHtml()}
 
+// ---- IP de quem preenche ----
+let IP='';
+(()=>{const tenta=(url,pega)=>{const ctl=typeof AbortController!=='undefined'?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),6000);
+  return fetch(url,{signal:ctl?ctl.signal:undefined}).then(r=>r.json()).then(j=>{clearTimeout(tm);const v=pega(j);if(!v)throw 0;return String(v)})};
+  tenta('https://api.ipify.org?format=json',j=>j.ip).catch(()=>tenta('https://api.seeip.org/jsonip',j=>j.ip)).then(v=>{IP=v}).catch(()=>{})})();
 // ---- envio ----
 form.addEventListener('submit',e=>{e.preventDefault();let first=null;
   form.querySelectorAll('[required]').forEach(el=>{const b=el.closest('.f'),ok=valid(el);b.classList.toggle('bad',!ok);if(!ok&&!first)first=el});
   if(first){first.scrollIntoView({block:'center'});if(first.type!=='radio'&&first.type!=='checkbox')first.focus();return}
   const p=P(),g=n=>(form.elements[n]||{}).value||'',pl=n=>(form.querySelector('input[name="'+n+'"]:checked')||{}).value||'';
-  const d={'Enviado em':new Date().toLocaleString('pt-BR'),'Trimestre':p.q+'º TRIMESTRE '+p.y,'Mês 1':p.m[0],'Mês 2':p.m[1],'Mês 3':p.m[2],'Empresa':g('empresa').trim(),'CNPJ':g('cnpj'),'Qtd sócios':g('qtd')};
+  const d={'Enviado em':new Date().toLocaleString('pt-BR'),'IP':IP||'não identificado','Trimestre':p.q+'º TRIMESTRE '+p.y,'Mês 1':p.m[0],'Mês 2':p.m[1],'Mês 3':p.m[2],'Empresa':g('empresa').trim(),'CNPJ':g('cnpj'),'Qtd sócios':g('qtd')};
   $$('#partners .card').forEach(c=>{const i=c.dataset.i,k='Sócio '+i+' - ';d[k+'Nome']=g('s'+i+'_nome').trim();d[k+'CPF']=g('s'+i+'_cpf');
     [0,1,2].forEach(m=>d[k+'Valor Mês '+(m+1)]=g('s'+i+'_m'+m));d[k+'Total']=[0,1,2].reduce((a,m)=>a+num(g('s'+i+'_m'+m)),0).toFixed(2).replace('.',',');
     d[k+'Pró-Labore']=pl('s'+i+'_pl');d[k+'Pró-Labore mensal']=g('s'+i+'_plv')});

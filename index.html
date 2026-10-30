@@ -97,7 +97,7 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
     <h2>O que considerar como lucro?</h2>
     <ul><li>Somente os valores transferidos da conta da empresa (PJ) para a conta pessoa física (PF);</li><li>Mantenha separadas as contas bancárias da empresa e do sócio.</li></ul>
     <h2>Como preencher?</h2>
-    <ul><li>Informe o valor total transferido da empresa para o sócio em cada mês;</li><li>Não inclua o Pró-Labore nesse valor — há um campo específico para ele.</li></ul>
+    <ul><li id="comoMes">Informe o valor total transferido da empresa para o sócio em cada mês;</li><li>Não inclua o Pró-Labore nesse valor.</li></ul>
   </div>
 
   <fieldset class="card">
@@ -166,12 +166,25 @@ const now=new Date();let cq=Math.floor(now.getMonth()/3),cy=now.getFullYear();if
 for(let i=0,q=cq,y=cy;i<8;i++){sel.add(new Option(q+'º trimestre de '+y,q+'-'+y));if(--q===0){q=4;y--}}
 const up=new URLSearchParams(location.search),want=up.get('tri')+'-'+up.get('ano');
 if([...sel.options].some(o=>o.value===want))sel.value=want;
+// Formulário MENSAL (link enviado pelo HUB para quem faturou acima de R$ 50 mil no mês):
+// ?periodo=mensal&mes=AAAA-MM[&cnpj=...&empresa=...]. Só aquele mês é pedido.
+let MM=up.get('periodo')==='mensal'&&/^\d{4}-\d{2}$/.test(up.get('mes')||'')?{y:+up.get('mes').slice(0,4),m:+up.get('mes').slice(5,7)}:null;
+if(MM&&(MM.m<1||MM.m>12))MM=null;
+if(MM){sel.innerHTML='';sel.add(new Option(MES[MM.m-1]+' de '+MM.y,Math.ceil(MM.m/3)+'-'+MM.y));sel.closest('.f').hidden=true}
+const MESES_PEDIDOS=MM?[(MM.m-1)%3]:[0,1,2];
+const ROTULO=()=>MM?MES[MM.m-1].toUpperCase()+' '+MM.y:P().q+'º TRIMESTRE '+P().y;
 function P(){const[q,y]=sel.value.split('-').map(Number),dm=q*3%12,dy=q===4?y+1:y,dd=new Date(dy,dm+1,0).getDate();
   return{q,y,m:[0,1,2].map(i=>MES[(q-1)*3+i]),prazo:String(dd).padStart(2,'0')+'/'+String(dm+1).padStart(2,'0')+'/'+dy}}
 function apply(){const p=P();
+  if(MM){const nm=MES[MM.m-1];
+    $('#pill').textContent=nm.toUpperCase()+' '+MM.y+' · MENSAL';
+    document.title='Lucro Distribuído | '+nm+' de '+MM.y+' — GlobalCast';
+    $('#lead').innerHTML='A empresa teve faturamento acima de <b>R$ 50 mil</b> em <b>'+nm+' de '+MM.y+'</b>. Desde 2026, lucros acima de R$ 50 mil no mês pagos por uma mesma empresa a um mesmo sócio têm retenção de 10% de IRRF (Lei 15.270/2025). Por isso, informe os valores transferidos da conta da empresa (PJ) para a conta pessoal (PF) de cada sócio <b>só neste mês</b>.';
+    $('#comoMes').textContent='Informe o valor total transferido da empresa para cada sócio em '+nm+' de '+MM.y+' (só este mês);';
+  }else{
   $('#pill').textContent=p.q+'º TRIMESTRE '+p.y;
   document.title='Lucro Distribuído | '+p.q+'º trimestre '+p.y+' — GlobalCast';
-  $('#lead').innerHTML='A partir de 2024, é obrigatório informar os lucros das empresas a cada três meses. Registre os valores transferidos da conta bancária da empresa (PJ) para a conta pessoal (PF) em <b>'+p.m[0]+', '+p.m[1]+' e '+p.m[2]+' de '+p.y+'</b>. Prazo final: <b>'+p.prazo+'</b>.';
+  $('#lead').innerHTML='A partir de 2024, é obrigatório informar os lucros das empresas a cada três meses. Registre os valores transferidos da conta bancária da empresa (PJ) para a conta pessoal (PF) em <b>'+p.m[0]+', '+p.m[1]+' e '+p.m[2]+' de '+p.y+'</b>. Prazo final: <b>'+p.prazo+'</b>.';}
   $$('[data-m]').forEach(e=>e.textContent=p.m[e.dataset.m].toUpperCase());totals()}
 sel.addEventListener('change',apply);
 
@@ -183,9 +196,8 @@ const mny=(l,n,h)=>'<div class="f"><label>'+l+(h?'<span class="hint">'+h+'</span
 const card=i=>'<fieldset class="card" data-i="'+i+'"><legend>Sócio '+i+'</legend><p class="sub">Informe os lucros/transferências realizados para este sócio.</p>'
  +'<div class="row"><div class="f"><label>Nome do beneficiário/sócio</label><input type="text" name="s'+i+'_nome" required><div class="err">Informe o nome.</div></div>'
  +'<div class="f"><label>CPF do beneficiário/sócio</label><input type="text" class="cpf" name="s'+i+'_cpf" inputmode="numeric" placeholder="000.000.000-00" required><div class="err">CPF inválido. Confira os números digitados.</div></div></div>'
- +[0,1,2].map(k=>mny('Valor transferido em R$ — <b data-m="'+k+'"></b>','s'+i+'_m'+k)).join('')
- +'<div class="f"><span class="lab">Tem folha de Pró-Labore no nome deste sócio? <span class="hint">Marque “Sim” apenas se houver folha de Pró-Labore.</span></span><div class="opts">'+yn('s'+i+'_pl')+'</div><div class="err">Selecione uma opção.</div></div>'
- +'<div data-if="s'+i+'_pl" hidden>'+mny('Valor mensal do Pró-Labore','s'+i+'_plv','Informe o valor BRUTO/TOTAL mensal (não o valor pago na guia, nem o total do trimestre).')+'</div></fieldset>';
+ +MESES_PEDIDOS.map(k=>mny('Valor transferido em R$ — <b data-m="'+k+'"></b>','s'+i+'_m'+k)).join('')
+ +'</fieldset>';
 
 $('#qtd').addEventListener('change',e=>{const n=+e.target.value||0,box=$('#partners');
   while(box.children.length<n)box.insertAdjacentHTML('beforeend',card(box.children.length+1));
@@ -235,27 +247,29 @@ function consultaCnpj(){
 function rows(){const out=[];$$('#partners .card').forEach(c=>{const i=c.dataset.i,g=n=>(form.elements[n]||{}).value||'';
   out.push([g('s'+i+'_nome').trim()||'Sócio '+i,[0,1,2].reduce((a,k)=>a+num(g('s'+i+'_m'+k)),0)])});return out}
 function sumHtml(){const r=rows();if(!r.length)return'<div><small>Selecione a quantidade de sócios para ver o resumo.</small></div>';
-  return r.map(x=>'<div><span>'+esc(x[0])+' <small>total no trimestre</small></span><span>'+brl(x[1])+'</span></div>').join('')+'<div><span>Total transferido aos sócios no '+P().q+'º trimestre de '+P().y+'</span><span>'+brl(r.reduce((a,x)=>a+x[1],0))+'</span></div>'}
+  const per=MM?'em '+MES[MM.m-1]+' de '+MM.y:'no '+P().q+'º trimestre de '+P().y;
+  return r.map(x=>'<div><span>'+esc(x[0])+' <small>'+(MM?'total no mês':'total no trimestre')+'</small></span><span>'+brl(x[1])+'</span></div>').join('')+'<div><span>Total transferido aos sócios '+per+'</span><span>'+brl(r.reduce((a,x)=>a+x[1],0))+'</span></div>'}
 function totals(){$('#sum').innerHTML=sumHtml()}
 
 // ---- envio ----
 const alertBox=$('#alert'),sendBtn=$('#send'),dup=$('#dup');
 function aviso(t){alertBox.textContent=t;alertBox.classList.toggle('show',!!t);if(t)alertBox.scrollIntoView({block:'center'})}
 function dados(){const p=P(),g=n=>(form.elements[n]||{}).value||'',pl=n=>(form.querySelector('input[name="'+n+'"]:checked')||{}).value||'';
-  return{trimestre:p.q,ano:p.y,cnpj:g('cnpj'),empresa:g('empresa').trim(),
+  return{trimestre:p.q,ano:p.y,periodicidade:MM?'mensal':'trimestral',mes:MM?MM.m:null,cnpj:g('cnpj'),empresa:g('empresa').trim(),
     convenio:pl('conv')==='Sim',convenio_valor:pl('conv')==='Sim'?num(g('conv_valor')):null,confirmado:true,
-    socios:$$('#partners .card').map(c=>{const i=c.dataset.i,tem=pl('s'+i+'_pl')==='Sim';
-      return{nome:g('s'+i+'_nome').trim(),cpf:g('s'+i+'_cpf'),meses:[0,1,2].map(m=>num(g('s'+i+'_m'+m))),pro_labore:tem,pro_labore_valor:tem?num(g('s'+i+'_plv')):null}})}}
+    socios:$$('#partners .card').map(c=>{const i=c.dataset.i;
+      // o pró-labore saiu do formulário: o controle agora é pelo HUB (folha do DP)
+      return{nome:g('s'+i+'_nome').trim(),cpf:g('s'+i+'_cpf'),meses:[0,1,2].map(m=>num(g('s'+i+'_m'+m))),pro_labore:false,pro_labore_valor:null}})}}
 async function post(path,body){const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   let j={};try{j=await r.json()}catch{}return{status:r.status,body:j}}
 function dataHora(iso){try{return new Date(iso).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}catch{return''}}
 async function enviar(substituir){
   const d=dados();d.substituir=!!substituir;sendBtn.disabled=true;sendBtn.textContent='Enviando…';aviso('');
   try{const r=await post('/enviar',d);
-    if(r.status===409){$('#dupText').textContent='Já existe uma resposta para o '+P().q+'º TRIMESTRE '+P().y+' desta empresa (enviada em '+dataHora(r.body.enviado_em)+'). Deseja substituir a resposta anterior por esta?';dup.showModal();return}
+    if(r.status===409){$('#dupText').textContent='Já existe uma resposta para '+(MM?'':'o ')+ROTULO()+' desta empresa (enviada em '+dataHora(r.body.enviado_em)+'). Deseja substituir a resposta anterior por esta?';dup.showModal();return}
     if(r.status===429){aviso('Muitos envios seguidos deste computador. Aguarde alguns minutos e tente de novo.');return}
     if(r.status!==200||!r.body.ok){aviso(r.body.error==='dados_invalidos'?'Confira os dados informados'+(r.body.detalhe?': '+r.body.detalhe:'')+'.':'Não foi possível registrar agora. Tente de novo em instantes ou fale com a gente no WhatsApp.');return}
-    $('#okSum').innerHTML='<div><span>Período</span><span>'+P().q+'º TRIMESTRE '+P().y+'</span></div><div><span>Empresa</span><span>'+esc(d.empresa)+'</span></div>'+sumHtml();
+    $('#okSum').innerHTML='<div><span>Período</span><span>'+ROTULO()+'</span></div><div><span>Empresa</span><span>'+esc(d.empresa)+'</span></div>'+sumHtml();
     form.hidden=true;$('#ok').classList.add('show');$('#ok').scrollIntoView({block:'start'})}
   catch{aviso('Sem conexão com o servidor. Verifique sua internet e tente de novo.')}
   finally{sendBtn.disabled=false;sendBtn.textContent='Enviar informações'}}
@@ -267,6 +281,10 @@ $('#dupReplace').addEventListener('click',()=>{dup.close();enviar(true)});
 $('#dupBack').addEventListener('click',()=>dup.close());
 $('#again').addEventListener('click',()=>{form.reset();$('#partners').innerHTML='';$('#cnpjMsg').textContent='';lastQ='';autoNome='';form.hidden=false;$('#ok').classList.remove('show');cond();apply();window.scrollTo({top:0})});
 apply();
+// link do HUB já com a empresa
+if(up.get('cnpj')){form.elements.cnpj.value=up.get('cnpj');form.elements.cnpj.dispatchEvent(new Event('input',{bubbles:true}))}
+if(up.get('empresa')&&!form.elements.empresa.value){form.elements.empresa.value=up.get('empresa');autoNome=up.get('empresa')}
+if(MM)$('#dup h2').textContent='Você já preencheu este mês';
 </script>
 </body>
 </html>

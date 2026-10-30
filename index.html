@@ -110,11 +110,6 @@ footer p{margin:4px 0}footer a{color:#f8f8f8}
 
   <div id="partners"></div>
 
-  <fieldset class="card">
-    <legend>Convênio médico</legend>
-    <div class="f"><span class="lab">Tem convênio médico no nome da empresa? <span class="hint">Marque “Sim” apenas se o convênio estiver no nome da empresa.</span></span><div class="opts" data-yn="conv"></div><div class="err">Selecione uma opção.</div></div>
-    <div class="f" data-if="conv" hidden><label>Valor mensal pago pela empresa <span class="hint">Apenas o valor pago por mês (não o total do trimestre).</span></label><div class="mw"><span>R$</span><input type="text" class="mny" inputmode="numeric" name="conv_valor" placeholder="0,00"></div><div class="err">Informe o valor mensal.</div></div>
-  </fieldset>
 
   <div class="sum" id="sum" aria-live="polite"></div>
   <div class="f"><label class="chk"><input type="checkbox" id="ck" required><span>Confirmo que as informações acima estão corretas.</span></label><div class="err">Marque para confirmar.</div></div>
@@ -218,7 +213,7 @@ function valid(el){
   if(el.name==='cnpj')return cnpjOk(v);
   return true}
 form.addEventListener('input',e=>{const t=e.target;
-  if(t.classList.contains('mny')){const c=t.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,13);t.value=c?(+c/100).toLocaleString('pt-BR',{minimumFractionDigits:2}):''}
+  if(t.classList.contains('mny')){const d=t.value.replace(/\D/g,''),c=d.replace(/^0+/,'').slice(0,13);t.value=c?(+c/100).toLocaleString('pt-BR',{minimumFractionDigits:2}):(d?'0,00':'')}
   if(t.classList.contains('cpf')){const v=t.value.replace(/\D/g,'').slice(0,11);t.value=v.length>3?v.replace(/^(\d{3})(\d{0,3})(\d{0,3})(\d{0,2})/,(m,a,b,c,d)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'-'+d:'')):v}
   if(t.name==='cnpj'){const v=t.value.toUpperCase().replace(/[^0-9A-Z]/g,'').slice(0,14);t.value=v.length>2?v.replace(/^(.{2})(.{0,3})(.{0,3})(.{0,4})(.{0,2})/,(m,a,b,c,d,e)=>a+(b?'.'+b:'')+(c?'.'+c:'')+(d?'/'+d:'')+(e?'-'+e:'')):v;consultaCnpj()}
   const b=t.closest('.f');if(b&&b.classList.contains('bad')&&valid(t))b.classList.remove('bad');
@@ -256,7 +251,7 @@ const alertBox=$('#alert'),sendBtn=$('#send'),dup=$('#dup');
 function aviso(t){alertBox.textContent=t;alertBox.classList.toggle('show',!!t);if(t)alertBox.scrollIntoView({block:'center'})}
 function dados(){const p=P(),g=n=>(form.elements[n]||{}).value||'',pl=n=>(form.querySelector('input[name="'+n+'"]:checked')||{}).value||'';
   return{trimestre:p.q,ano:p.y,periodicidade:MM?'mensal':'trimestral',mes:MM?MM.m:null,cnpj:g('cnpj'),empresa:g('empresa').trim(),
-    convenio:pl('conv')==='Sim',convenio_valor:pl('conv')==='Sim'?num(g('conv_valor')):null,confirmado:true,
+    convenio:false,convenio_valor:null,confirmado:true,
     socios:$$('#partners .card').map(c=>{const i=c.dataset.i;
       // o pró-labore saiu do formulário: o controle agora é pelo HUB (folha do DP)
       return{nome:g('s'+i+'_nome').trim(),cpf:g('s'+i+'_cpf'),meses:[0,1,2].map(m=>num(g('s'+i+'_m'+m))),pro_labore:false,pro_labore_valor:null}})}}
